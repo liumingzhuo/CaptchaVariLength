@@ -3,36 +3,37 @@
 
 from keras.callbacks import ModelCheckpoint, Callback
 import numpy as np
-from utils import load_data, create_simpleCnnRnn,create_imgText
-from config import image_shape,max_caption_len,vocab_size,model_output
+from utils import load_data, create_simpleCnnRnn, create_imgText
+from config import image_shape, max_caption_len, vocab_size, model_output
+
 
 class ValidateAcc(Callback):
+
     def __init__(self, image_model, val_data, val_label, model_output):
         self.image_model = image_model
         self.val = val_data
         self.val_label = val_label
         self.model_output = model_output
 
-    def on_epoch_end(self, epoch, logs={}):
-        print '\n———————————--------'
-        self.image_model.load_weights(self.model_output+'weights.%02d.hdf5' % epoch)
+    def on_epoch_end(self, epoch, **logs):
+        self.image_model.load_weights(self.model_output + 'weights.%02d.hdf5' % epoch)
         r = self.image_model.predict(val, verbose=0)
         y_predict = np.asarray([np.argmax(i, axis=1) for i in r])
-        val_true = np.asarray([np.argmax(i, axis = 1) for i in self.val_label])
+        val_true = np.asarray([np.argmax(i, axis=1) for i in self.val_label])
         length = len(y_predict) * 1.0
         correct = 0
-        for (true,predict) in zip(val_true,y_predict):
-            print true,predict
+        for (true, predict) in zip(val_true, y_predict):
+            print(true, predict)
             if list(true) == list(predict):
                 correct += 1
-        print "Validation set acc is: ", correct/length
-        print '\n———————————--------'
+        print("Validation set acc is: ", correct / length)
 
 
 import os
 import glob
 from keras.models import load_model
 from keras.optimizers import SGD
+
 '''
 image_model = create_simpleCnnRnn(image_shape, max_caption_len,vocab_size)
 sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
@@ -48,16 +49,17 @@ else:
         image_model = load_model(latest_file)
 '''
 
-image_model = create_imgText(image_shape, max_caption_len,vocab_size)
+image_model = create_imgText(image_shape, max_caption_len, vocab_size)
 
 split_ratio = 0.7
-train,train_label,val,val_label = load_data(split_ratio)
+train, train_label, val, val_label = load_data(split_ratio)
 
-val_acc_check_pointer = ValidateAcc(image_model,val,val_label,model_output)
+val_acc_check_pointer = ValidateAcc(image_model, val, val_label, model_output)
 check_pointer = ModelCheckpoint(filepath=model_output + "weights.{epoch:02d}.hdf5")
 sgd = SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
 image_model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 image_model.fit(train, train_label,
-                shuffle=True, batch_size=16, nb_epoch=20, validation_split=0.2, callbacks=[check_pointer, val_acc_check_pointer])
+                shuffle=True, batch_size=16, nb_epoch=20, validation_split=0.2,
+                callbacks=[check_pointer, val_acc_check_pointer])
 
-#image_model.save("../checkpoints/model2.hdf5")
+# image_model.save("../checkpoints/model2.hdf5")

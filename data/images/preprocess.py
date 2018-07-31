@@ -4,7 +4,8 @@ import os
 import numpy as np
 from PIL import Image
 import json
-input_directories = ["five_digit/", "four_digit/", "six_digit/","seven_digit/"]
+
+input_directories = ["five_digit/", "four_digit/", "six_digit/", "seven_digit/"]
 
 pictures = []
 ch_index = {}
@@ -22,14 +23,14 @@ for directory in input_directories:
                 ch_index[l] = index
                 index += 1
         img = Image.open(directory + pic)
-        img = img.resize((250,60),Image.BILINEAR) # all convert to Height = 60, width=250, channel = 3
+        img = img.resize((250, 60), Image.BILINEAR)  # all convert to Height = 60, width=250, channel = 3
         img = np.array(img)
         pictures.append(np.rollaxis(img, 2, 0))
         image_no += 1
-        if image_no%1000 == 0:
-            print image_no
+        if image_no % 1000 == 0:
+            print(image_no)
 
-print "save pictures"
+print("save pictures")
 with open("pic", "wb") as inp:
     np.save(inp, pictures)
 
@@ -42,9 +43,9 @@ max_caption_length = 7 + 1
 id_labels = []
 for label in labels:
     template = [ch_index['<EOF>']] * max_caption_length
-    for (i,c) in enumerate(label):
+    for (i, c) in enumerate(label):
         template[i] = ch_index[c]
     id_labels.append(template)
-print "save labels"
+print("save labels")
 with open("labels", "wb") as inp:
     np.save(inp, id_labels)
